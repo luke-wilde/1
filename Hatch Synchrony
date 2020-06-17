@@ -1,0 +1,31 @@
+#Script to perform analysis on hatch phenology of HUGO and MEGU in Beluga AK
+
+require(ggplot2); require(dplyr);require(ggthemes); require(RColorBrewer); require(gamlss); require(voxel); library(mgcViz);require(mgcv)
+
+#load the data
+data <- read.csv("C:/Users/14064/Dropbox/Wilde et al. 2020/Data/Nest Phenology/Hatchdates.csv")
+head(data)
+
+#subset the data
+data <- data[ data$Count > 0,]
+max(data$Proportion)
+
+#create column proportion
+data$Proportion <- as.numeric(data$Proportion)
+
+#define two datasets
+gull <- data[ data$Species == "1MEGU",]
+godwit <- data[ data$Species == "2HUGO",]
+
+#first model on all
+mod <- gam(Proportion~JuneDay+Species, family=betar, data=data); summary(mod); confint(mod)
+
+mod.god <- gam(Proportion~JuneDay, family=betar, data=godwit); summary(mod.god)
+
+mod.gull <- gam(Proportion~JuneDay+Species, family=betar, data=data); summary(mod.gull); confint(mod.gull)
+
+pd <- data.frame(JuneDay=seq(1,2,3,length =200))
+
+
+predict(mod.gull, se=TRUE, type = "response")
+predict(mod.god, se=TRUE)
