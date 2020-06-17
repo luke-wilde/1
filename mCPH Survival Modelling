@@ -1,0 +1,62 @@
+# Script to perform a mixed-effect cox prop hazard model on survival data
+# code used in Flexible Space use and density-dependent heterospecific interactions determine fledging success in a precocial bird
+# Author: Luke Wilde
+
+
+library(survival)
+library(MuMIn)
+library(arm)
+library(ggplot2)
+library(survminer)
+library(coxme)
+library(Hmisc)
+library(lme4)
+library(lmerTest)
+library(nlme)
+
+#load the data
+CPHM4<-read.csv("C:/Users/14064/Dropbox/Wilde et al. 2020/Data/CPH/Beluga_CPH_v2.2.csv") #only includes less than 28 days old
+attach(CPHM4)
+head(CPHM4)
+
+###standardizing variables
+CPHM4$zInsect<-rescale(CPHM4$Insect)
+CPHM4$zHatching.Date<-rescale(CPHM4$Hatching.Date)
+CPHM4$zNNdist <- rescale(CPHM4$Near.Neighbor)
+CPHM4$zDensity <- rescale(CPHM4$Density1)
+CPHM4$zLoc.Spread <- rescale(CPHM4$Loc.Spread)
+CPHM4$zYear <- rescale(CPHM4$Year)
+CPHM4$zAge <- rescale(CPHM4$Age)
+CPHM4$zTree <- rescale(CPHM4$Treeline)
+CPHM4$zNest <- rescale(CPHM4$MEGUnests)
+CPHM4$zColony <- rescale(CPHM4$MEGUdist)
+CPHM4$zMatch <- rescale(CPHM4$Match)
+
+
+#cph<-CPHM4[ which(CPHM4$Age<27),]
+##Model Selection
+
+options(scipen = 999)
+
+#contruct the model with the rescaled variables
+#Including Start creates a time-dependent model, it is a stratified model if you have only stop!
+memod4 <- coxme(Surv(Start, Stop, Death)~zInsect+zMatch+zDensity+zLoc.Spread+zHatching.Date+zNNdist+zNest+zTree+zColony+(1|Year)+(1|Brood/Individual),na.action = na.fail, data=CPHM4); summary(memod4); AICc(memod4); confint(memod4)
+
+
+# rerun on the true scales
+memod5 <- coxme(Surv(Start, Stop, Death)~Hatching.Date+Near.Neighbor+MEGUnests+MEGUdist+Insect+Density+Treeline+Loc.Spread+(1|Year)+(1|Brood/Individual),na.action = na.fail, data=CPHM4); summary(memod5); AICc(memod5); confint(memod5)
+
+#check for disproportionality
+cph.assumption <- cox.zph(memod4)
+plot(cph.assumption)
+cph.assumption$call
+print(cph.assumption)
+
+#model averaging
+dd<-dredge(memod4, trace = 2)
+subset(dd, delta<4)
+model.avg(dd, subset = delta < 4)
+avgmod.95p <- model.avg(dd, delta<4)
+confint(avgmod.95p)
+summary(get.models(dd, 1)[[1]])
+detach(CPHM4)
