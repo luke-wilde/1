@@ -1,0 +1,28 @@
+#This script - Analyzing relationship between abundance (density) and Age with distance to colony and neighbors
+
+require(MuMIn); require(ggplot2); require(RColorBrewer);require(arm); require(gvlma); library(olsrr);require(lme4); require(gridExtra);library(r2glmm); require(mgcv); require(gamlss)
+
+
+
+
+#Set working directory
+setwd("C:/Users/14064/Dropbox/Wilde et al. 2020/Output/DD/")
+
+#Load datasets
+data<-read.csv("DensityDependence_lm.csv", fileEncoding="UTF-8-BOM")
+head(data)
+#min(data$Density1)
+
+#subset the data to include only individuals with live batteries
+data <- data[ data$Age < 25,]
+
+#remove scientific notation
+options(scipen = 999)
+
+
+# models
+gmod1 <- gamlss(MEGUdist ~ Age + Density1 + I(Age^2) + I(Density1^2) + random(Brood), family = "NO", data=data); summary(gmod1); confint(gmod1)
+#data$fit1.gam.mod <- predict(gmod1, type = "response")
+
+gmod2 <- gamlss(Near.Neighbor ~ Age + Density1 + I(Age^2) + I(Density1^2) + random(Brood), family = "NO", data=data); summary(gmod2); confint(gmod2)
+#data$fit2.gam.mod <- predict(gmod2, type = "response")
