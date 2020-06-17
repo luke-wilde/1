@@ -1,0 +1,42 @@
+#Use a custom function: https://www.r-statistics.com/2013/07/creating-good-looking-survival-curves-the-ggsurv-function/
+
+library(coxme)
+library(kinship2)
+library(ggplot2)
+library(survminer)
+library(survival)
+library(ggfortify)
+library(wesanderson)
+library(ggthemes)
+require(gridExtra)
+require(stratification)
+
+#read in the data
+CPHM4<-read.csv("C:/Users/14064/Dropbox/Wilde et al. 2020/Data/CPH/Beluga_CPH_v2.2.csv") #only includes less than 28 days old
+attach(CPHM4)
+head(CPHM4)
+
+#define stratum boundaries of data
+strata.LH(CPHM4$MEGUdist, CV = 5)
+
+options(scipen = 99999)
+
+CPHM4$Start <- (CPHM4$Start*3)
+CPHM4$Stop <- (CPHM4$Stop*3)
+
+#cut(CPHM4$Near.Neighbor, 3, include.lowest = T)
+
+fit <- survfit(Surv(Start, Stop, Death)~Nngroup.original + cluster(Brood), data = CPHM4)
+
+fit2 <- survfit(Surv(Start, Stop, Death)~HDgroup + cluster(Brood), data = CPHM4)
+
+fit3 <-  survfit(Surv(Start, Stop, Death)~Nestgroup + cluster(Brood), data = CPHM4)
+
+fit4 <- survfit(Surv(Start, Stop, Death)~ Dist.Group + cluster(Brood), data = CPHM4)
+
+#use ggsurvplot(fit) function from URL to create curves in ggplot format
+
+#set the number of ticks before graphing
+
+number_ticks <- function(n) {function(limits) pretty(limits, n)} 
+
