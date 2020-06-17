@@ -1,0 +1,133 @@
+# Script to perform 1st and 2nd order Nearest Neighbor analyses on ppp objects (North Bog)
+#Author: Luke Wilde
+#Date: 9.9.19
+install.packages("spatstat");install.packages("tkrplot");install.packages("tkRplotR");install.packages("rpanel");
+# call packages
+library(spatstat);library(rpanel);library(tkrplot);library(tkRplotR)
+  
+# read in the csv you want
+read <- read.csv("F:/Data/NearNeighbor.csv")
+read1 <- subset(read, Plot == 'NORTH')
+
+#subset by specific year
+data.nn <- subset(read1, Year == '2016')
+
+#identify polygon coordinates for North Bog
+wN <- owin(poly=list(x=c(607856.9081, 607751.2091, 607393.8753, 606905.3475, 606179.8324, 605543.6017, 605109.8963, 604741.3207, 604510.7523, 604117.2802, 604083.5915, 603999.5461, 604156.3287, 604377.5967, 604679.9067, 605054.1361, 605317.2012, 605481.6039, 605701.9861, 605946.5381, 606082.334, 606232.4762, 606367.9089, 606591.2266, 606742.2654, 606993.9955, 607215.4692, 607568.1687, 607772.8425, 607856.9081), y=c(6788033.482, 6788276.694, 6788638.029, 6788955.061, 6788904.613, 6788643.747, 6788229.088, 6787585.407, 6787104.598, 6786402.511, 6785984.917, 6785734.186, 6785620.77, 6785546.291, 6785513.369, 6785433.148, 6785494.989, 6785723.745, 6785928.952, 6786114.867, 6786425.181, 6786654.208, 6786594.614, 6787099.76, 6787358.731, 6787446.973, 6787457.599, 6787582.467, 6787804.735, 6788033.482)))
+
+
+TS1.1 <- subset(data.nn, Time.1Step == '1')
+TS1.2 <- subset(data.nn, Time.1Step == '2')
+TS1.3 <- subset(data.nn, Time.1Step == '3')
+TS1.4 <- subset(data.nn, Time.1Step == '4')
+TS1.5 <- subset(data.nn, Time.1Step == '5')
+TS1.6 <- subset(data.nn, Time.1Step == '6')
+TS1.7 <- subset(data.nn, Time.1Step == '7')
+TS1.8 <- subset(data.nn, Time.1Step == '8')
+TS1.9 <- subset(data.nn, Time.1Step == '9')
+TS1.10 <- subset(data.nn, Time.1Step == '10')
+TS1.11 <- subset(data.nn, Time.1Step == '11')
+TS1.12 <- subset(data.nn, Time.1Step == '12')
+TS1.13 <- subset(data.nn, Time.1Step == '13')
+TS1.14 <- subset(data.nn, Time.1Step == '14')
+
+#identify spatial coordinates
+x1 <- TS1.1$Latitude
+x2 <- TS1.2$Latitude
+x3 <- TS1.3$Latitude
+x4 <- TS1.4$Latitude
+x5 <- TS1.5$Latitude
+x6 <- TS1.6$Latitude
+x7 <- TS1.7$Latitude
+x8 <- TS1.8$Latitude
+x9 <- TS1.9$Latitude
+x10 <- TS1.10$Latitude
+x11 <- TS1.11$Latitude
+x12 <- TS1.12$Latitude
+x13 <- TS1.13$Latitude
+x14 <- TS1.14$Latitude
+y1 <- TS1.1$Longitude
+y2 <- TS1.2$Longitude
+y3 <- TS1.3$Longitude
+y4 <- TS1.4$Longitude
+y5 <- TS1.5$Longitude
+y6 <- TS1.6$Longitude
+y7 <- TS1.7$Longitude
+y8 <- TS1.8$Longitude
+y9 <- TS1.9$Longitude
+y10 <- TS1.10$Longitude
+y11 <- TS1.11$Longitude
+y12 <- TS1.12$Longitude
+y13 <- TS1.13$Longitude
+y14 <- TS1.14$Longitude
+
+#set the marks
+m1 <- as.factor(TS1.1$Name) #two marks, one is brood name and one is time step
+m2 <- as.factor(TS1.2$Name)
+m3<- as.factor(TS1.3$Name)
+m4<- as.factor(TS1.4$Name)
+m5<- as.factor(TS1.5$Name)
+m6<- as.factor(TS1.6$Name)
+m7<- as.factor(TS1.7$Name)
+m8<- as.factor(TS1.8$Name)
+m9<- as.factor(TS1.9$Name)
+m10<- as.factor(TS1.10$Name)
+m11<- as.factor(TS1.11$Name)
+m12<- as.factor(TS1.12$Name)
+m13<- as.factor(TS1.13$Name)
+m14<- as.factor(TS1.14$Name)
+
+#create ppp object
+Points1 <- with(TS1.1, ppp(x1, y1, window=wN, marks=(m1)))
+Points2 <- with(TS1.2, ppp(x2, y2, window=wN, marks=(m2)))
+Points3 <- with(TS1.3, ppp(x3, y3, window=wN, marks=(m3)))
+Points4 <- with(TS1.4, ppp(x4, y4, window=wN, marks=(m4)))
+Points5 <- with(TS1.5, ppp(x5, y5, window=wN, marks=(m5)))
+Points6 <- with(TS1.6, ppp(x6, y6, window=wN, marks=(m6)))
+Points7 <- with(TS1.7, ppp(x7, y7, window=wN, marks=(m7)))
+Points8 <- with(TS1.8, ppp(x8, y8, window=wN, marks=(m8)))
+Points9 <- with(TS1.9, ppp(x9, y9, window=wN, marks=(m9)))
+Points10 <- with(TS1.10, ppp(x10, y10, window=wN, marks=(m10)))
+Points11<- with(TS1.11, ppp(x11, y11, window=wN, marks=(m11)))
+Points12 <- with(TS1.12, ppp(x12, y12, window=wN, marks=(m12)))
+Points13 <- with(TS1.13, ppp(x13, y13, window=wN, marks=(m13)))
+Points14 <- with(TS1.14, ppp(x14, y14, window=wN, marks=(m14)))
+
+#calculate true nndist
+df1 <- as.data.frame(nndist(Points1))
+df2 <- as.data.frame(nndist(Points2))
+df3 <- as.data.frame(nndist(Points3))
+df4 <- as.data.frame(nndist(Points4))
+df5 <- as.data.frame(nndist(Points5))
+df6 <- as.data.frame(nndist(Points6))
+df7 <- as.data.frame(nndist(Points7))
+df8 <- as.data.frame(nndist(Points8))
+df9 <- as.data.frame(nndist(Points9))
+df10 <- as.data.frame(nndist(Points10))
+df11 <- as.data.frame(nndist(Points11))
+df12 <- as.data.frame(nndist(Points12))
+df13 <- as.data.frame(nndist(Points13))
+df14 <- as.data.frame(nndist(Points14))
+
+colnames(df1) <- "distance"
+colnames(df2)<- "distance"
+colnames(df3)<- "distance"
+colnames(df4)<- "distance"
+colnames(df5)<- "distance"
+colnames(df6)<- "distance"
+colnames(df7)<- "distance"
+colnames(df8)<- "distance"
+colnames(df9)<- "distance"
+colnames(df10)<- "distance"
+colnames(df11)<- "distance"
+colnames(df12)<- "distance"
+colnames(df13)<- "distance"
+colnames(df14)<- "distance"
+bound_dataframe <- rbind(df1,df2,df3,df4,df5,df6,df7,df8,df9,df10,df11,df12,df13,df14)
+bound_dataframe
+# Repeat for each time step
+# Repeat for the other plot
+read1 <- subset(read, Plot == 'SOUTH')
+#subset by specific year
+data.nn <- subset(read1, Year == '2016')
+wS <- owin(poly=list(x=c(601625.7271,601317.7231,601219.1935,601201.6974,601324.932,601435.1069,601513.971,601562.853,601628.9215,601731.9346,601834.7397,601863.4261,601860.5075,601778.9568,601749.3692,601797.5608,601964.3919,602155.6809,602249.8955,602401.4021,602485.5701,602428.6236,602558.0176,602605.4643,602642.2524,602693.5086,602759.6152,602828.6436,602898.2048,602886.2965,602779.681,602608.6321,602482.8355,602578.48,602501.7069,602364.1035,602238.5187,601999.4828,601993.5119,601923.5854,601808.5317,601717.535,601665.9561, 601625.7271), y=c(6778629.448,6778484.238,6778188.194,6778042.403,6777912.35,6777744.458,6777685.386,6777757.357,6777847.808,6777891.606,6777807.931,6777708.178,6777586.476,6777533.495,6777446.684,6777386.826,6777354.798,6777266.878,6777254.54,6777502.095,6777557.154,6777631.947,6777818.84,6777964.778,6778151.457,6778362.236,6778555.283,6778721.267,6778888.473,6779053.36,6779119.928,6779173.723,6779178.361,6778955.98,6778806.513,6778725.66,6778678.604,6778599.969,6778483.017,6778369.746,6778324.181,6778377.604,6778403.649,6778629.448)))
