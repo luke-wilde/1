@@ -1,0 +1,156 @@
+#Author: Luke Wilde
+#Date: October 10, 2019
+#Purpose: This is a script to prepare data and calculate HR from multiple source programs - KDE and BBMM
+#More Information: series at https://www.youtube.com/watch?v=lz7FsLK-VU0&list=PLm2Tz0zIk8WZyYTFgDmhKmPg0og8sV2YO&index=3 provides a helpful workflow
+
+#.libPaths( c("~C:/Users/14064/Documents/R/win-library/3.6", .libPaths() ) )
+#install.packages()
+
+memory.size()
+memory.limit()
+options(scipen = 999)
+
+#setwd("C:/Users/14064")
+
+#Install the necessary packages
+#install.packages(c("adehabitatHR", "rgdal", "sp", "ggmap", "mapproj", "maptools", "rgeos", "raster", "leaflet", "move", "ctmm", "BBMM", "PBSmapping", "shiny"))
+#install.packages("geosphere")
+#install.packages("plyr")
+
+#call said packages using function
+packagelist <- c("geosphere", "adehabitatHR", "rgdal", "sp", "ggmap", "mapproj", "maptools", "rgeos", "raster", "leaflet", "move", "ctmm", "BBMM", "PBSmapping", "shiny", "plyr")
+lapply(packagelist, require, character.only = TRUE)
+
+
+#dataset
+movedata <- read.csv("F:/Model Outputs/adeHab/KUD_UDOI_year_v2/gull19.csv")
+head(movedata)
+
+
+#can plot the data to visualize
+leaflet(data=movedata) %>% addTiles(group="Map")%>%
+  addProviderTiles("Esri.WorldImagery",group="Sattelite")%>%
+  addCircleMarkers(~location.long, ~location.lat, popup = ~as.character(PTT_ID),
+                   label =~as.character(timestamp),
+                   radius = 5,
+                   stroke = F,
+                   fillOpacity = .7)%>%
+  addLayersControl(
+    baseGroups = c("Map", "Satellite"),
+    options=layersControlOptions(collapsed=F)
+  )
+
+#now organize the data
+movedata <- movedata[with(movedata,order(movedata$PTT_ID,movedata$timestamp)),]
+
+#define coordinates and datum in df
+coordinates(movedata) <- c("location.long", "location.lat")
+proj4string(movedata) <- CRS("+proj=longlat +datum=WGS84")
+
+#transform lat/long to UTM and rename the columns for ease down the road
+utm <- spTransform(movedata, CRS("+proj=utm +zone=5 ellps=NAD87"))
+utm_locs <- data.frame(as(utm, "SpatialPoints"))
+colnames(utm_locs) <- c("UTM_W", "UTM_N")
+
+#define date and time
+date_time <- as.POSIXct(strptime(as.character(movedata$timestamp),"%m/%d/%Y %H:%M", tz="GMT"))
+month <- as.numeric(format(date_time, "%m"))
+year <- as.numeric(format(date_time, "%Y")) #only saves the unique digits of the year so 2019 looks like 0019
+day <- as.numeric(format(date_time, "%d"))
+time <- strftime(date_time, format="%H:%M")
+
+#create new data and imporved frame for HR analysis
+final_move1 <- data.frame(ID=as.factor(movedata$PTT_ID),GS=movedata$ground.speed,Head=movedata$heading,Height=movedata$height,
+                          UTM_W=utm_locs$UTM_W,UTM_N=utm_locs$UTM_N,month,year,day,time,timestamp=date_time)
+final_move <- na.omit(final_move1)
+
+final_move
+
+head(final_move)
+
+#define the coordinates and projection of the new df
+coordinates(final_move) <- c("UTM_W", "UTM_N")
+projection(final_move) <- CRS("+proj=utm +zone=5 ellps=NAD87")
+
+#find which broods had > 5 locations
+as.data.frame(sort(table(unlist(final_move$ID))))
+
+
+#define the grid (essentially a raster surface) that is the grid for the UD function, if you get an error following the getverticeshr() function, you can manually enter a value for the grid command in the kernelUD().
+#NOTICE __________ This grid is way too massive and takes a long time to render
+min(final_move$UTM_W);max(final_move$UTM_W)
+min(final_move$UTM_N);max(final_move$UTM_N)
+x <- seq(min(590000),max(700000), by=30)
+y <- seq(min(6000000),max(7000000), by=30)
+xy <- expand.grid(x=x, y=y)
+coordinates(xy) <- ~x+y
+gridded(xy) <- TRUE
+class(xy)
+
+#The following code is to calculate the appropriate h for each year. From https://johnpvanek.wordpress.com/2016/05/02/find-the-appropriate-smoothing-factor-h-for-kernel-densities-in-r/
+
+# h_100 <- mcp(final_move[,1],percent=100)$area
+# h_set <- max(h_100)
+# h_set
+# 
+# ud <- kernelUD(final_move[,1],h="href",grid=xy)  #calculate the utilization distribution
+# ud@h
+# ver <- getverticeshr(ud,percent=95)$area  #find the 95% utilization distribution
+# kern <- kernel.area(ud, percent = seq(20, 95, by = 5),unout=("km2"))  #find the ud for 20 - 95%
+# ver  #view the 95% ud area
+# kern  #view the areas for the 20% ud up to the 95% ud by increments of 5
+# 
+# h <- unlist(ud@h[,1],use.names=F)  #find the smoothing factor from the utilization distribution
+# h  #view the smoothing parameter
+
+
+#create the UD, can use the grid command to define the grid by a value
+#ge_hr_kde_UD <- kernelUD(final_move[,1], h="href", grid=xy)
+ge_hr_kde_UD1 <- kernelUD(final_move[,1], h="href", grid=xy)
+ge_hr_kde_UD1
+
+
+#create the UD, can use the grid command to define the grid by a value
+ge_hr_kde_UD <- kernelUD(final_move[,1], h="href", grid=xy)
+
+overlaps <- kerneloverlaphr(ge_hr_kde_UD, percent = 95, meth="UDOI", conditional=TRUE)
+overlaps
+
+#get the area estimates based on UD
+#ge_hr_kde <- kernel.area(ge_hr_kde_UD, percent=c(95), unout=c("km2"))
+ge_hr_kde1 <- kernel.area(ge_hr_kde_UD1, percent=c(95), unout=c("km2"))
+warnings()
+#ge_hr_kde
+ge_hr_kde1
+
+colnames(ge_hr_kde) <- (unique(ge_hr_kde$ID))
+
+gc() # to clear memory of u
+memory.size() # to set memory limits - dunno if this works
+memory.limit(size = NA)
+
+#create our polygon of the HR
+hr_kde_poly <- getverticeshr(ge_hr_kde_UD1, percent=95)
+hr_kde_latlong <- spTransform(hr_kde_poly, CRS("+proj=longlat +datum=WGS84"))
+
+kde_hr_1 <- fortify(subset(hr_kde_latlong, id == "2019MEGU"))
+
+hr_kde_poly2 <- getverticeshr(ge_hr_kde_UD1, percent=75)
+hr_kde_latlong2 <- spTransform(hr_kde_poly2, CRS("+proj=longlat +datum=WGS84"))
+kde_hr_2 <- fortify(subset(hr_kde_latlong2, id == "2019MEGU"))
+
+#code to display in the plot frame
+leaflet(data=as.data.frame(movedata)) %>% addTiles(group="Map")%>%
+  addProviderTiles("Esri.WorldImagery",group="Sattelite")%>%
+  addCircleMarkers(~location.long, ~location.lat,
+                   label =~as.character(timestamp),
+                   radius = 5,
+                   stroke = F,
+                   fillOpacity = .7) %>%
+  addPolygons(data=kde_hr_1, lng= ~long, lat =~lat, group = "id", weight=1)%>%
+#  addPolygons(data=kde_hr_2, lng= ~long, lat =~lat, group = "id", weight=1)%>%
+  addLayersControl(
+    baseGroups = c("Map", "Satellite"),
+    overlayGroups = c("kde_hr_1"),
+    options=layersControlOptions(collapsed=F)
+  )
