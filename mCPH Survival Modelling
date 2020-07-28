@@ -40,11 +40,11 @@ options(scipen = 999)
 
 #contruct the model with the rescaled variables
 #Including Start creates a time-dependent model, it is a stratified model if you have only stop!
-memod4 <- coxme(Surv(Start, Stop, Death)~zInsect+zMatch+zDensity+zLoc.Spread+zHatching.Date+zNNdist+zNest+zTree+zColony+(1|Year)+(1|Brood/Individual),na.action = na.fail, data=CPHM4); summary(memod4); AICc(memod4); confint(memod4)
+memod4 <- coxme(Surv(Start, Stop, Death)~zInsect+zMatch+zDensity+zLoc.Spread+zHatching.Date+zNNdist+zNest+zTree+zColony+(1|Year)+(1|Brood/Code),na.action = na.fail, data=CPHM4); summary(memod4); AICc(memod4); confint(memod4)
 
 
 # rerun on the true scales
-memod5 <- coxme(Surv(Start, Stop, Death)~Hatching.Date+Near.Neighbor+MEGUnests+MEGUdist+Insect+Density+Treeline+Loc.Spread+(1|Year)+(1|Brood/Individual),na.action = na.fail, data=CPHM4); summary(memod5); AICc(memod5); confint(memod5)
+memod5 <- coxme(Surv(Start, Stop, Death)~Hatching.Date+Near.Neighbor+MEGUnests+MEGUdist+Insect+Density+Treeline+Loc.Spread+(1|Year)+(1|Brood/Code),na.action = na.fail, data=CPHM4); summary(memod5); AICc(memod5); confint(memod5)
 
 #check for disproportionality
 cph.assumption <- cox.zph(memod4)
